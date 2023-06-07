@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>537363572208-7tejo6p4o6ba32nc8nkp6iau9d28o2lr.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.537363572208-7tejo6p4o6ba32nc8nkp6iau9d28o2lr</string>
+	<key>API_KEY</key>
+	<string>AIzaSyCMBSojWX2EfU8L0GGOdUBy7u6UaPG7ACY</string>
+	<key>GCM_SENDER_ID</key>
+	<string>537363572208</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>co.leafyapp.leafy</string>
+	<key>PROJECT_ID</key>
+	<string>leafy-d1c13</string>
+	<key>STORAGE_BUCKET</key>
+	<string>leafy-d1c13.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:537363572208:ios:b52f2bd23e7d954b3ca935</string>
+</dict>
+</plist>
