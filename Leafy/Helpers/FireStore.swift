@@ -29,8 +29,8 @@ class FireStoreController {
         let directionData = recipe.directions.map { directionSet in
             return [
                 "id": directionSet.id,
-                "name": directionSet.header,
-                "directions": directionSet.body
+                "header": directionSet.header,
+                "body": directionSet.body
             ]
         }
         
@@ -78,7 +78,7 @@ class FireStoreController {
                 "description": recipe.description,
                 "rating": recipe.likes,
                 "date": recipe.creationDate,
-                "heroImageURL": ""
+                "heroImageURL": recipe.heroImageURL
             ]) { err in
                 if let err = err {
                     print("Error writing document: \(err)")
@@ -90,12 +90,123 @@ class FireStoreController {
         
     }
     
-//    func getTenRecipes() -> [Recipe] {
-//        let db = Firestore.firestore()
-//        var recipes: [Recipe] = []
-//
-//        db.collection("recipes").limit(to: <#T##Int#>)
-//
-//    }
+    func getLatestRecipes(completion: @escaping ([Recipe]?, Error?) -> Void) {
+        let db = Firestore.firestore()
+        var recipes: [Recipe] = []
+
+        let ref = db.collection("recipes").order(by: "date", descending: true).limit(to: 3)
+        ref.getDocuments { (querySnapshot, error) in
+            if let error = error {
+                print("Error getting documents: \(error)")
+                completion(nil, error)
+            } else {
+                for document in querySnapshot!.documents {
+                    let data = document.data()
+
+                    // Convert ingredients
+                    let ingredientsData = data["ingredients"] as? [[String: Any]] ?? []
+                    var ingredients: [Ingredient] = []
+                    for ingredientData in ingredientsData {
+                        if let id = ingredientData["id"] as? String,
+                            let name = ingredientData["name"] as? String,
+                            let quantity = ingredientData["quantity"] as? String,
+                            let unit = ingredientData["unit"] as? String {
+                            let ingredient = Ingredient(id: id, name: name, quantity: quantity, unit: unit)
+                            ingredients.append(ingredient)
+                        }
+                    }
+
+                    // Convert directions
+                    let directionsData = data["directions"] as? [[String: Any]] ?? []
+                    var directions: [DirectionSet] = []
+                    for directionData in directionsData {
+                        if let id = directionData["id"] as? String,
+                            let header = directionData["header"] as? String,
+                            let body = directionData["body"] as? String {
+                            let direction = DirectionSet(id: id, header: header, body: body)
+                            directions.append(direction)
+                        }
+                    }
+
+                    let recipe = Recipe(
+                        id: document.documentID,
+                        name: data["name"] as? String ?? "",
+                        ingredients: ingredients,
+                        directions: directions,
+                        time: data["time"] as? Int ?? 0,
+                        description: data["description"] as? String ?? "",
+                        likes: data["rating"] as? Int ?? 0,
+                        creationDate: data["date"] as? Double ?? 0,
+                        heroImageURL: data["heroImageURL"] as? String ?? "",
+                        heroImage: nil
+                    )
+                    recipes.append(recipe)
+                }
+                completion(recipes, nil)
+            }
+        }
+    }
+    
+    func fetchRecipesByName(name: String, completion: @escaping ([Recipe]) -> Void) {
+        let db = Firestore.firestore()
+        
+        db.collection("recipes")
+            .whereField("name", isGreaterThanOrEqualTo: name)
+            .whereField("name", isLessThan: name + "z")
+            .getDocuments { snapshot, error in
+                guard let documents = snapshot?.documents else {
+                    print("Failed to fetch recipes: \(error?.localizedDescription ?? "")")
+                    completion([])
+                    return
+                }
+                
+                let recipes = documents.compactMap { document -> Recipe? in
+                    let data = document.data()
+                    
+                    // Convert ingredients
+                    let ingredientsData = data["ingredients"] as? [[String: Any]] ?? []
+                    var ingredients: [Ingredient] = []
+                    for ingredientData in ingredientsData {
+                        if let id = ingredientData["id"] as? String,
+                           let name = ingredientData["name"] as? String,
+                           let quantity = ingredientData["quantity"] as? String,
+                           let unit = ingredientData["unit"] as? String {
+                            let ingredient = Ingredient(id: id, name: name, quantity: quantity, unit: unit)
+                            ingredients.append(ingredient)
+                        }
+                    }
+                    
+                    // Convert directions
+                    let directionsData = data["directions"] as? [[String: Any]] ?? []
+                    var directions: [DirectionSet] = []
+                    for directionData in directionsData {
+                        if let id = directionData["id"] as? String,
+                           let header = directionData["header"] as? String,
+                           let body = directionData["body"] as? String {
+                                let direction = DirectionSet(id: id, header: header, body: body)
+                                directions.append(direction)
+                                print(direction)
+                        }
+                    }
+                    
+                    let recipe = Recipe(
+                        id: document.documentID,
+                        name: data["name"] as? String ?? "",
+                        ingredients: ingredients,
+                        directions: directions,
+                        time: data["time"] as? Int ?? 0,
+                        description: data["description"] as? String ?? "",
+                        likes: data["likes"] as? Int ?? 0,
+                        creationDate: data["creationDate"] as? Double ?? 0,
+                        heroImageURL: data["heroImageURL"] as? String ?? "",
+                        heroImage: nil
+                    )
+                    
+                    return recipe
+                }
+                
+                completion(recipes)
+            }
+    }
 }
 

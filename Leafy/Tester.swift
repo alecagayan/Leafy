@@ -6,17 +6,27 @@
 //
 
 import SwiftUI
+import Foundation
 
 struct Tester: View {
     @State var presentPopup = false
+    @State var strink = ""
     var body: some View {
-        Button("New Recipe") {
-          presentPopup = true
+        VStack {
+            Button("New Recipe") {
+                presentPopup = true
+            }
+            .popover(isPresented: $presentPopup) {
+                NewRecipeView(presentPopup: $presentPopup)
+                
+            }
+            
+            TextField("Hello", text: $strink)
+                .textFieldStyle(SearchBarStyle())
         }
-        .popover(isPresented: $presentPopup) {
-            NewRecipeView(presentPopup: $presentPopup)
-        }    }
+    }
 }
+
 
 struct Tester_Previews: PreviewProvider {
     static var previews: some View {

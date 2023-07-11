@@ -6,16 +6,46 @@
 //
 
 import SwiftUI
+import FirebaseStorage
+
 
 struct NewRecipeView: View {
+    
     @State var name: String = ""
     @State var shouldShowImagePicker = false
     @State var ingredients: Array<Ingredient> = []
     @State var directions: Array<DirectionSet> = []
     @Binding var presentPopup: Bool
     @State var image = UIImage()
+
+    @State var url: String = ""
+    @State var imageURL: String = ""
     
     @Environment(\.colorScheme) var colorScheme
+    
+    func uploadImage(image: UIImage, completion: @escaping (_ imageURL: String, _ success: Bool) -> Void) {
+        let storage = Storage.storage()
+        let storageRef = storage.reference()
+        let imageRef = storageRef.child("images/\(UUID().uuidString).jpg")
+        
+        let uploadTask = imageRef.putData(image.jpegData(compressionQuality: 0.5)!, metadata: nil) { (metadata, error) in
+            guard let metadata = metadata else {
+                print("error")
+                return
+            }
+            
+            imageRef.downloadURL { (url, error) in
+                guard let downloadURL = url else {
+                    print("error")
+                    return
+                }
+                
+                let imageURL = downloadURL.absoluteString
+                print(imageURL)
+                completion(imageURL, true) // Pass the imageURL to the completion closure
+            }
+        }
+    }
 
     var body: some View {
         VStack {
@@ -46,7 +76,7 @@ struct NewRecipeView: View {
                         }) {
                             //if image not selected yet, show placeholderlight image, otherwise show image
                             if image == UIImage() {
-                                Image("placeholderlight")
+                                Image("emptyuploadlight")
                                     .resizable()
                                     .scaledToFit()
                                     .cornerRadius(10)
@@ -138,19 +168,28 @@ struct NewRecipeView: View {
             Spacer ()
             Button("Save") {
                 // save recipe into Recipe struct
-                let newRecipe = Recipe(id: UUID().uuidString, name: name, ingredients: ingredients, directions: directions, time: 1, description: "shrick", likes: 5, creationDate: Date().timeIntervalSince1970)
                 
-                //print newrecipe
-                print(newRecipe)
-                print("here i am")
-                
-                //save to firestore
-                FireStoreController().uploadRecipe(recipe: newRecipe)
-                    presentPopup = false
-                
+                //if there is an image, save it to storage
+                if image != UIImage() {
+                    uploadImage(image: image) { (imageURL, success) -> Void in
+                        if success {
+                            let newRecipe = Recipe(id: UUID().uuidString, name: name, ingredients: ingredients, directions: directions, time: 1, description: "shrick", likes: 5, creationDate: Date().timeIntervalSince1970, heroImageURL: imageURL)
+                            
+                                FireStoreController().uploadRecipe(recipe: newRecipe)
+
+                        }
+                    }
+                } else {
+                    let newRecipe = Recipe(id: UUID().uuidString, name: name, ingredients: ingredients, directions: directions, time: 1, description: "shrick", likes: 5, creationDate: Date().timeIntervalSince1970, heroImageURL: imageURL)
+                    
+                    FireStoreController().uploadRecipe(recipe: newRecipe)
+
+                }
+                presentPopup = false
             }
             .buttonStyle(NextButton())
         }
+        
     }
 }
 

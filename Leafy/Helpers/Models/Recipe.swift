@@ -15,7 +15,7 @@ struct Recipe: Identifiable, Codable {
     var directions: Array<DirectionSet>
     var time: Int
     var description: String
-    var likes: Double
+    var likes: Int
     var creationDate: Double
     var heroImageURL: String?
     var heroImage: UIImage?

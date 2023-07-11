@@ -14,7 +14,7 @@ struct DirectionRow: View {
 
     var body: some View {
         VStack (alignment: .leading) {
-            TextFieldDynamicWidth(title: "Header", text: .constant(header))
+            TextField("Header", text: .constant(header))
                 .font(.custom("DMSans-Medium", size: 18))
 
             Spacer()
