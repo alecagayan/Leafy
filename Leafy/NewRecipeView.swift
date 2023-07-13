@@ -7,19 +7,28 @@
 
 import SwiftUI
 import FirebaseStorage
+import Combine
 
 
 struct NewRecipeView: View {
     
     @State var name: String = ""
+    @State var time: String = ""
+    @State private var selection = "Select"
+
     @State var shouldShowImagePicker = false
     @State var ingredients: Array<Ingredient> = []
     @State var directions: Array<DirectionSet> = []
     @Binding var presentPopup: Bool
     @State var image = UIImage()
 
+
     @State var url: String = ""
     @State var imageURL: String = ""
+    
+    let tools = ["Grill", "Oven", "Stove", "Microwave", "Other"]
+    let difficulties = ["Easy", "Medium", "Hard"]
+
     
     @Environment(\.colorScheme) var colorScheme
     
@@ -46,10 +55,36 @@ struct NewRecipeView: View {
             }
         }
     }
+    // format time as xx:xx
+    private func formatTime() {
+        // Remove any non-digit and non-colon characters from the time string
+        var cleanedTime = time.replacingOccurrences(of: "[^0-9:]", with: "", options: .regularExpression)
+        
+        // Make sure the time string has at most 5 characters
+        if cleanedTime.count > 5 {
+            cleanedTime = String(cleanedTime.prefix(5))
+        }
+        
+        // Insert colon at appropriate position (xx:xx format)
+        if cleanedTime.count >= 3 {
+            let index = cleanedTime.index(cleanedTime.startIndex, offsetBy: 2)
+            if cleanedTime[index] != ":" {
+                cleanedTime.insert(":", at: index)
+            }
+        }
+        
+        // Add leading zero if necessary
+        if cleanedTime.count == 2 && cleanedTime.last == ":" {
+            cleanedTime = "0" + cleanedTime
+        }
+        
+        // Update the time string
+        time = cleanedTime
+    }
+
 
     var body: some View {
         VStack {
-
             ScrollView {
                 HStack {
                     VStack {
@@ -58,15 +93,15 @@ struct NewRecipeView: View {
                                 .font(.custom("DMSans-Medium", size: 30))
                             Spacer()
                             //popup close button
-                            Button(action: {
-                                // close popup
-                                presentPopup = false
-                            }) {
-                                Image(systemName: "xmark.circle.fill")
-                                    .resizable()
-                                    .frame(width: 25, height: 25)
-                                    .foregroundColor(.gray)
-                            }
+//                            Button(action: {
+//                                // close popup
+//                                presentPopup = false
+//                            }) {
+//                                Image(systemName: "xmark.circle.fill")
+//                                    .resizable()
+//                                    .frame(width: 25, height: 25)
+//                                    .foregroundColor(.gray)
+//                            }
                         }
                         
                         // large rectangular image that allows user to upload an image
@@ -88,6 +123,45 @@ struct NewRecipeView: View {
                             }
                             
                         }
+                        Spacer()
+                            HStack {
+                                Image(systemName: "clock")
+                                //text field that always formats in xx:xx format
+                                TextField("00:00", text: $time)
+                                    .onReceive(Just(time)) { _ in
+                                        formatTime()
+                                    }
+                                    .font(.custom("DMSans-Medium", size: 18))
+                                    .foregroundColor(colorScheme == .dark ? .white : Color(red: 13/255, green: 35/255, blue: 41/255))
+                                
+//                                Image(systemName: "dumbbell")
+//                                Picker("Select a difficulty level", selection: $selection) {
+//                                    ForEach(difficulties, id: \.self) {
+//                                        Text($0)
+//                                    }
+//                                }
+//                                .padding(.leading, -16.0)
+//                                .pickerStyle(.menu)
+//                                .font(.custom("DMSans-Medium", size: 18))
+//                                .foregroundColor(colorScheme == .dark ? .white : Color(red: 13/255, green: 35/255, blue: 41/255))
+//                                .frame(width: 150)
+                                
+                                Spacer()
+                                
+                                Image(systemName: "cooktop")
+                                Picker("Select a cooking tool", selection: $selection) {
+                                    ForEach(tools, id: \.self) {
+                                        Text($0)
+                                    }
+                                }
+                                .padding(.leading, -16.0)
+                                .pickerStyle(.menu)
+                                .font(.custom("DMSans-Medium", size: 18))
+                                .foregroundColor(colorScheme == .dark ? .white : Color(red: 13/255, green: 35/255, blue: 41/255))
+
+                            
+
+                            }.padding(.horizontal, 8)
                         // interface for adding ingredients
                         // frame width 300x80 (width x height)
                         HStack {
@@ -141,25 +215,25 @@ struct NewRecipeView: View {
                         }
                         HStack {
                             VStack {
-                                ForEach(directions.indices, id: \.self) { index in
-                                    
-                                    VStack(alignment: .leading) {
-                                        TextField("Header", text: $directions[index].header)
-                                            .font(.custom("DMSans-Medium", size: 18))
+                                    ForEach(directions.indices, id: \.self) { index in
                                         
-                                        TextField("Body Text", text: $directions[index].body, axis: .vertical)
-                                            .lineLimit(1...4)
-                                            .font(.custom("DMSans-Regular", size: 18))
-                                        
-                                        
-                                    }
-                                    .foregroundColor(colorScheme == .dark ? .white : Color(red: 13/255, green: 35/255, blue: 41/255))
+                                        VStack(alignment: .leading) {
+                                            TextField("Header", text: $directions[index].header)
+                                                .font(.custom("DMSans-Medium", size: 18))
+                                            
+                                            TextField("Body Text", text: $directions[index].body, axis: .vertical)
+                                                .lineLimit(1...4)
+                                                .font(.custom("DMSans-Regular", size: 18))
+                                            
+                                            
+                                        }
+                                        .foregroundColor(colorScheme == .dark ? .white : Color(red: 13/255, green: 35/255, blue: 41/255))
                                 }
                             }
                             Spacer()
                         }
                     }
-                    .padding(16)
+                    .padding(8)
                     .sheet(isPresented: $shouldShowImagePicker) {
                         ImagePicker(sourceType: .photoLibrary, selectedImage: self.$image)
                     }
@@ -173,14 +247,14 @@ struct NewRecipeView: View {
                 if image != UIImage() {
                     uploadImage(image: image) { (imageURL, success) -> Void in
                         if success {
-                            let newRecipe = Recipe(id: UUID().uuidString, name: name, ingredients: ingredients, directions: directions, time: 1, description: "shrick", likes: 5, creationDate: Date().timeIntervalSince1970, heroImageURL: imageURL)
+                            let newRecipe = Recipe(id: UUID().uuidString, name: name, ingredients: ingredients, directions: directions, time: time, description: "shrick", likes: 5, creationDate: Date().timeIntervalSince1970, heroImageURL: imageURL)
                             
                                 FireStoreController().uploadRecipe(recipe: newRecipe)
 
                         }
                     }
                 } else {
-                    let newRecipe = Recipe(id: UUID().uuidString, name: name, ingredients: ingredients, directions: directions, time: 1, description: "shrick", likes: 5, creationDate: Date().timeIntervalSince1970, heroImageURL: imageURL)
+                    let newRecipe = Recipe(id: UUID().uuidString, name: name, ingredients: ingredients, directions: directions, time: time, description: "shrick", likes: 5, creationDate: Date().timeIntervalSince1970, heroImageURL: imageURL)
                     
                     FireStoreController().uploadRecipe(recipe: newRecipe)
 
@@ -189,6 +263,7 @@ struct NewRecipeView: View {
             }
             .buttonStyle(NextButton())
         }
+        .padding()
         
     }
 }

@@ -13,7 +13,7 @@ struct Recipe: Identifiable, Codable {
     var name: String
     var ingredients: Array<Ingredient>
     var directions: Array<DirectionSet>
-    var time: Int
+    var time: String
     var description: String
     var likes: Int
     var creationDate: Double

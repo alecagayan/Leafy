@@ -60,6 +60,10 @@ struct RecipeView: View {
                             }
                             .font(.custom("DMSans-Medium", size: 18))
                         }
+
+                        
+                        
+                        Spacer()
                         
                         // Display directions
                         HStack {
@@ -96,6 +100,6 @@ struct RecipeView: View {
 
 struct RecipeView_Previews: PreviewProvider {
     static var previews: some View {
-        RecipeView(recipe: Recipe(id: UUID().uuidString, name: "Banana Pudding", ingredients: [Ingredient(id: UUID().uuidString, name: "Banana", quantity: "2", unit: "count")], directions: [DirectionSet(id: UUID().uuidString, header: "Step 1", body: "Mix thoroughly until pudding-like consistency is achieved")], time: 120, description: "", likes: 2, creationDate: 1000, heroImageURL: "https://natashaskitchen.com/wp-content/uploads/2022/08/Banana-Pudding-SQ.jpg"))
+        RecipeView(recipe: Recipe(id: UUID().uuidString, name: "Banana Pudding", ingredients: [Ingredient(id: UUID().uuidString, name: "Banana", quantity: "2", unit: "count")], directions: [DirectionSet(id: UUID().uuidString, header: "Step 1", body: "Mix thoroughly until pudding-like consistency is achieved")], time: "01:15", description: "", likes: 2, creationDate: 1000, heroImageURL: "https://natashaskitchen.com/wp-content/uploads/2022/08/Banana-Pudding-SQ.jpg"))
     }
 }
