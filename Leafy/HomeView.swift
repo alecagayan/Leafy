@@ -12,14 +12,18 @@ struct HomeView: View {
 
     var body: some View {
         TabView(selection: $selection) {
+            NewRecipeView()
+                .tabItem {
+                    Label("New Recipe", systemImage: "plus")
+                }
+                .tag(1)
             RecipeSearchView()
                 .tabItem{
                     Label("Search", systemImage: "doc.text.magnifyingglass")
                 }
-            NewRecipeView(presentPopup: .constant(true))
-                .tabItem {
-                    Label("New Recipe", systemImage: "plus")
-                }
+                .tag(2)
+                
+
         }
     }
 }

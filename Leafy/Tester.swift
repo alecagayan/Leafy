@@ -17,7 +17,7 @@ struct Tester: View {
                 presentPopup = true
             }
             .popover(isPresented: $presentPopup) {
-                NewRecipeView(presentPopup: $presentPopup)
+                NewRecipeView()
                 
             }
             

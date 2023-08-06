@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import PhotosUI
 import FirebaseStorage
 import Combine
 
@@ -19,12 +20,15 @@ struct NewRecipeView: View {
     @State var shouldShowImagePicker = false
     @State var ingredients: Array<Ingredient> = []
     @State var directions: Array<DirectionSet> = []
-    @Binding var presentPopup: Bool
+//    @Binding var presentPopup: Bool
+    @State var selectedItem: [PhotosPickerItem] = []
     @State var image = UIImage()
+    @State var data: Data?
 
 
     @State var url: String = ""
     @State var imageURL: String = ""
+    
     
     let tools = ["Grill", "Oven", "Stove", "Microwave", "Other"]
     let difficulties = ["Easy", "Medium", "Hard"]
@@ -81,6 +85,7 @@ struct NewRecipeView: View {
         // Update the time string
         time = cleanedTime
     }
+    
 
 
     var body: some View {
@@ -105,24 +110,36 @@ struct NewRecipeView: View {
                         }
                         
                         // large rectangular image that allows user to upload an image
-                        Button(action: {
-                            // upload image
-                            shouldShowImagePicker.toggle()
-                        }) {
-                            //if image not selected yet, show placeholderlight image, otherwise show image
-                            if image == UIImage() {
-                                Image("emptyuploadlight")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .cornerRadius(10)
-                            } else {
-                                Image(uiImage: image)
-                                    .resizable()
-                                    .scaledToFit()
-                                    .cornerRadius(10)
+                        PhotosPicker(selection: $selectedItem,
+                                     matching: .images) {
+                                //if image not selected yet, show placeholderlight image, otherwise show image
+                            if let data = data, let image = UIImage(data: data) {
+                                    Image(uiImage: image)
+                                        .resizable()
+                                        .scaledToFit()
+                                        .cornerRadius(10)
+                                } else {
+                                    Image("emptyuploadlight")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .cornerRadius(10)
+                                }
+                        }.onChange(of: selectedItem) { newValue in
+                            guard let item = selectedItem.first else {
+                                return
                             }
-                            
+                            item.loadTransferable(type: Data.self) { result in
+                                switch result {
+                                case .success(let data):
+                                    if let data = data {
+                                        self.data = data
+                                    }
+                                case .failure(let failure):
+                                    print("Error: \(failure.localizedDescription)")
+                                }
+                            }
                         }
+                        
                         Spacer()
                             HStack {
                                 Image(systemName: "clock")
@@ -148,9 +165,9 @@ struct NewRecipeView: View {
                                 
                                 Spacer()
                                 
-                                Image(systemName: "cooktop")
-                                Picker("Select a cooking tool", selection: $selection) {
-                                    ForEach(tools, id: \.self) {
+                                Image(systemName: "dumbbell")
+                                Picker("Select a difficulty level", selection: $selection) {
+                                    ForEach(difficulties, id: \.self) {
                                         Text($0)
                                     }
                                 }
@@ -234,9 +251,6 @@ struct NewRecipeView: View {
                         }
                     }
                     .padding(8)
-                    .sheet(isPresented: $shouldShowImagePicker) {
-                        ImagePicker(sourceType: .photoLibrary, selectedImage: self.$image)
-                    }
                 }
             }
             Spacer ()
@@ -259,7 +273,6 @@ struct NewRecipeView: View {
                     FireStoreController().uploadRecipe(recipe: newRecipe)
 
                 }
-                presentPopup = false
             }
             .buttonStyle(NextButton())
         }
@@ -270,6 +283,6 @@ struct NewRecipeView: View {
 
 struct NewRecipeView_Previews: PreviewProvider {
     static var previews: some View {
-        NewRecipeView(presentPopup: .constant(false))
+        NewRecipeView()
     }
 }
